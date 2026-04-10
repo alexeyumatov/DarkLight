@@ -11,16 +11,16 @@ public static class LevelLoader
 {
     public const int TileSize = 128;
 
-    public static List<Tile> LoadTiles(ContentManager content, string levelAssetName)
+    public static List<Tile> LoadTiles(ContentManager content, string levelAssetName, out Vector2 playerStart)
     {
         var charToTexture = BuildTextureMap(content);
-        // var levelText = content.Load<string>(levelAssetName); // e.g. "Levels/level_1"
         var levelText = File.ReadAllText(Path.Combine(content.RootDirectory, levelAssetName));
         var lines = levelText
             .Replace("\r\n", "\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         var tiles = new List<Tile>();
+        playerStart = Vector2.Zero;
 
         for (var y = 0; y < lines.Length; y++)
         {
@@ -28,12 +28,19 @@ public static class LevelLoader
             for (var x = 0; x < row.Length; x++)
             {
                 var symbol = row[x];
+                var position = new Vector2(x * TileSize, y * TileSize);
+                
+                if (symbol == 'P')
+                {
+                    playerStart = position;
+                    continue;
+                }
+
                 if (!charToTexture.TryGetValue(symbol, out var texture))
                 {
                     continue; // ignore non-tile symbols for now
                 }
 
-                var position = new Vector2(x * TileSize, y * TileSize);
                 tiles.Add(new Tile(texture, position));
             }
         }

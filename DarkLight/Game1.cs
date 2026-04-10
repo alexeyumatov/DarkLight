@@ -10,6 +10,7 @@ public class Game1 : Game
     private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch = null!;
     private List<Tile> _tiles = new();
+    private Player _player;
 
     public Game1()
     {
@@ -27,7 +28,12 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _tiles = LevelLoader.LoadTiles(Content, "Levels/level_1.txt");
+        
+        Vector2 startPosition;
+        _tiles = LevelLoader.LoadTiles(Content, "Levels/level_test.txt", out startPosition);
+
+        var playerTexture = Content.Load<Texture2D>("Hero/HeroStatic/Player_Static_Animation_2");
+        _player = new Player(playerTexture, startPosition);
     }
 
     protected override void Update(GameTime gameTime)
@@ -37,6 +43,8 @@ public class Game1 : Game
         {
             Exit();
         }
+
+        _player.Update(gameTime, _tiles);
 
         base.Update(gameTime);
     }
@@ -50,6 +58,9 @@ public class Game1 : Game
         {
             tile.Draw(_spriteBatch);
         }
+        
+        _player.Draw(_spriteBatch);
+        
         _spriteBatch.End();
 
         base.Draw(gameTime);
