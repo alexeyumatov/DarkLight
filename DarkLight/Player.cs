@@ -12,7 +12,7 @@ public class Player
 
     private readonly Texture2D _texture;
 
-    public Rectangle Bounds => new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
+    public Rectangle Bounds => new((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
     
     private const float MaxMoveSpeed = 500f;
     private const float Acceleration = 4000f;
