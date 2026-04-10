@@ -265,3 +265,26 @@ FakesAssemblies/
 .idea
 .vscode
 .config
+
+# Build результаты
+bin/
+obj/
+
+# Временные файлы
+tmp*
+*.tmp
+
+# MGCB временные файлы
+*.mgcb~
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / JetBrains
+.idea/
+
+# OS файлы
+.DS_Store
+Thumbs.db
