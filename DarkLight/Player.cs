@@ -10,6 +10,10 @@ public class Player
     public Vector2 Position;
     public Vector2 Velocity;
 
+    public int HealthPoints { get; set; } = 100;
+    public int ShieldPoints { get; set; } = 50;
+    public int Stamina { get; set; } = 100;
+
     private readonly Texture2D _texture;
 
     public Rectangle Bounds => new((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
@@ -86,7 +90,7 @@ public class Player
     {
         var playerBounds = Bounds;
 
-        foreach (var tile in tiles.Where(tile => playerBounds.Intersects(tile.Bounds)))
+        foreach (var tile in tiles.Where(tile => tile.IsCollidable && playerBounds.Intersects(tile.Bounds)))
         {
             if (horizontal)
             {

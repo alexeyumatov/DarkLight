@@ -41,7 +41,8 @@ public static class LevelLoader
                     continue; // ignore non-tile symbols for now
                 }
 
-                tiles.Add(new Tile(texture, position));
+                bool isCollidable = symbol != '|';
+                tiles.Add(new Tile(texture, position, isCollidable));
             }
         }
 
