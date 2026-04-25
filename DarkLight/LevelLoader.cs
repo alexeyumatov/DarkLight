@@ -41,8 +41,10 @@ public static class LevelLoader
                     continue; // ignore non-tile symbols for now
                 }
 
-                bool isCollidable = symbol != '|';
-                tiles.Add(new Tile(texture, position, isCollidable));
+                bool isLadder = symbol == '|';
+                bool isPortal = symbol is '#' or '№' or '!' or '&';
+                bool isCollidable = !isLadder && !isPortal;
+                tiles.Add(new Tile(texture, position, isCollidable, isLadder, isPortal));
             }
         }
 

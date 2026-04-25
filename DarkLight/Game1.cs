@@ -1,32 +1,58 @@
-﻿﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 
 namespace DarkLight;
+
+public enum GameState { LevelSelect, Playing }
 
 public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch = null!;
+    private SpriteBatch _spriteBatch;
+
+    // Rendering
+    private RenderTarget2D _renderTarget;
+    private const int LogicalWidth = 1920;
+    private const int LogicalHeight = 1080;
+    private float _renderScale;
+    private int _renderOffsetX;
+    private int _renderOffsetY;
+
+    // State
+    private GameState _gameState = GameState.LevelSelect;
+    private LevelSelectScreen _levelSelectScreen;
+
+    // Game objects — null until a level is loaded
     private List<Tile> _tiles = new();
     private Player _player;
     private Camera _camera;
     private HUD _hud;
+    private List<Bullet> _bullets = new();
+    private Texture2D _bulletTexture;
 
-    private RenderTarget2D _renderTarget;
-    private const int LogicalWidth = 1920;
-    private const int LogicalHeight = 1080;
+    // Input
+    private MouseState _prevMouse;
+    private float _shootCooldown;
+
+    // Music
+    private Song _menuSong;
+    private Song _gameSong;
+
+    // Level select background color
+    private static readonly Color MenuBgColor = new Color(18, 12, 38);
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-        
         _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
         _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
         _graphics.IsFullScreen = true;
         _graphics.ApplyChanges();
-        
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
@@ -35,65 +61,166 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _renderTarget = new RenderTarget2D(GraphicsDevice, LogicalWidth, LogicalHeight);
-        _camera = new Camera();
+
+        // Cache scale/offset — fullscreen, static
+        float sx = (float)GraphicsDevice.Viewport.Width / LogicalWidth;
+        float sy = (float)GraphicsDevice.Viewport.Height / LogicalHeight;
+        _renderScale = Math.Min(sx, sy);
+        int drawW = (int)(LogicalWidth * _renderScale);
+        int drawH = (int)(LogicalHeight * _renderScale);
+        _renderOffsetX = (GraphicsDevice.Viewport.Width - drawW) / 2;
+        _renderOffsetY = (GraphicsDevice.Viewport.Height - drawH) / 2;
+
+        _levelSelectScreen = new LevelSelectScreen();
+        _levelSelectScreen.LoadContent(Content);
+
         _hud = new HUD();
         _hud.LoadContent(Content);
-        
-        Vector2 startPosition;
-        _tiles = LevelLoader.LoadTiles(Content, "Levels/level_1.txt", out startPosition);
 
-        var playerTexture = Content.Load<Texture2D>("Hero/HeroStatic/Player_Static_Animation_2");
-        _player = new Player(playerTexture, startPosition);
+        _bulletTexture = Content.Load<Texture2D>("Hero/Bullet/1");
+
+        _menuSong = Content.Load<Song>("Music/main_menu_melody");
+        _gameSong = Content.Load<Song>("Music/game_melody");
+
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Volume = 0.17f;
+        MediaPlayer.Play(_menuSong);
     }
+
+    // Converts raw screen-space mouse to logical 1920×1080 space.
+    private Point ToLogical(MouseState m) =>
+        new((int)((m.X - _renderOffsetX) / _renderScale),
+            (int)((m.Y - _renderOffsetY) / _renderScale));
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-            Keyboard.GetState().IsKeyDown(Keys.Escape))
+        var kb = Keyboard.GetState();
+        var mouse = Mouse.GetState();
+        var logical = ToLogical(mouse);
+
+        bool clicked = mouse.LeftButton == ButtonState.Pressed
+                    && _prevMouse.LeftButton == ButtonState.Released;
+
+        switch (_gameState)
         {
-            Exit();
+            case GameState.LevelSelect:
+                if (kb.IsKeyDown(Keys.Escape))
+                    Exit();
+
+                int chosen = _levelSelectScreen.Update(logical, clicked);
+                if (chosen > 0)
+                    StartLevel(chosen);
+                break;
+
+            case GameState.Playing:
+                if (kb.IsKeyDown(Keys.Escape))
+                    ReturnToMenu();
+                else
+                    UpdateGame(gameTime, clicked);
+                break;
+        }
+
+        _prevMouse = mouse;
+        base.Update(gameTime);
+    }
+
+    private void StartLevel(int number)
+    {
+        _tiles = LevelLoader.LoadTiles(Content, $"Levels/level_{number}.txt", out Vector2 start);
+        var tex = Content.Load<Texture2D>("Hero/HeroStatic/Player_Static_Animation_2");
+        _player = new Player(tex, start);
+        _camera = new Camera();
+        _bullets = new List<Bullet>();
+        _shootCooldown = 0f;
+        _gameState = GameState.Playing;
+
+        MediaPlayer.Stop();
+        MediaPlayer.Play(_gameSong);
+    }
+
+    private void ReturnToMenu()
+    {
+        _tiles.Clear();
+        _bullets.Clear();
+        _player = null;
+        _camera = null;
+        _gameState = GameState.LevelSelect;
+
+        MediaPlayer.Stop();
+        MediaPlayer.Play(_menuSong);
+    }
+
+    private void UpdateGame(GameTime gameTime, bool mouseJustPressed)
+    {
+        var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_shootCooldown > 0)
+            _shootCooldown -= dt;
+
+        if (mouseJustPressed && _shootCooldown <= 0)
+        {
+            var startPos = new Vector2(
+                _player.Position.X + (_player.IsFacingRight ? _player.Bounds.Width : -_bulletTexture.Width),
+                _player.Position.Y + _player.Bounds.Height / 2f - _bulletTexture.Height / 2f);
+            _bullets.Add(new Bullet(_bulletTexture, startPos, _player.IsFacingRight));
+            _shootCooldown = 0.25f;
+        }
+
+        for (int i = _bullets.Count - 1; i >= 0; i--)
+        {
+            _bullets[i].Update(gameTime, _tiles);
+            if (_bullets[i].IsDead)
+                _bullets.RemoveAt(i);
         }
 
         _player.Update(gameTime, _tiles);
         _camera.Update(_player, LogicalWidth, LogicalHeight);
 
-        base.Update(gameTime);
+        // Portal collision — return to level select
+        var playerBounds = _player.Bounds;
+        if (_tiles.Any(t => t.IsPortal && t.Bounds.Intersects(playerBounds)))
+            ReturnToMenu();
     }
 
     protected override void Draw(GameTime gameTime)
     {
+        var logical = ToLogical(_prevMouse);
+
         GraphicsDevice.SetRenderTarget(_renderTarget);
-        GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin(transformMatrix: _camera.Transform);
-        foreach (var tile in _tiles)
+        switch (_gameState)
         {
-            tile.Draw(_spriteBatch);
+            case GameState.LevelSelect:
+                GraphicsDevice.Clear(MenuBgColor);
+                _spriteBatch.Begin();
+                _levelSelectScreen.Draw(_spriteBatch, logical);
+                _spriteBatch.End();
+                break;
+
+            case GameState.Playing:
+                GraphicsDevice.Clear(Color.Black);
+
+                _spriteBatch.Begin(transformMatrix: _camera.Transform);
+                foreach (var tile in _tiles) tile.Draw(_spriteBatch);
+                foreach (var bullet in _bullets) bullet.Draw(_spriteBatch);
+                _player.Draw(_spriteBatch);
+                _spriteBatch.End();
+
+                _spriteBatch.Begin();
+                _hud.Draw(_spriteBatch, _player, ultimateAttack: false, heroIsPoisoned: false, dashIsReady: true);
+                _spriteBatch.End();
+                break;
         }
-        
-        _player.Draw(_spriteBatch);
-        
-        _spriteBatch.End();
 
-        // Draw UI
-        _spriteBatch.Begin();
-        _hud.Draw(_spriteBatch, _player, ultimateAttack: false, heroIsPoisoned: false, dashIsReady: true);
-        _spriteBatch.End();
-
+        // Scale render target to actual screen
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Black);
 
-        float scaleX = (float)GraphicsDevice.Viewport.Width / LogicalWidth;
-        float scaleY = (float)GraphicsDevice.Viewport.Height / LogicalHeight;
-        float scale = System.Math.Min(scaleX, scaleY);
-        
-        int drawWidth = (int)(LogicalWidth * scale);
-        int drawHeight = (int)(LogicalHeight * scale);
-        int destX = (GraphicsDevice.Viewport.Width - drawWidth) / 2;
-        int destY = (GraphicsDevice.Viewport.Height - drawHeight) / 2;
-
-        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-        _spriteBatch.Draw(_renderTarget, new Rectangle(destX, destY, drawWidth, drawHeight), Color.White);
+        int drawW = (int)(LogicalWidth * _renderScale);
+        int drawH = (int)(LogicalHeight * _renderScale);
+        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend,
+            SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+        _spriteBatch.Draw(_renderTarget, new Rectangle(_renderOffsetX, _renderOffsetY, drawW, drawH), Color.White);
         _spriteBatch.End();
 
         base.Draw(gameTime);
