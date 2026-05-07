@@ -44,42 +44,31 @@ public static class LevelLoader
                 var symbol = row[x];
                 var position = new Vector2(x * TileSize, y * TileSize);
 
-                if (symbol == 'P')
+                switch (symbol)
                 {
-                    playerStart = position;
-                    continue;
-                }
-
-                if (symbol == 't')
-                {
-                    coins.Add(new Coin(coinTexture, position));
-                    continue;
-                }
-
-                if (symbol == 'E')
-                {
-                    enemies.Add(new Enemy(EnemyType.Weak, position, weakIdle, weakDeath, System.Array.Empty<Texture2D>(), 160, 270));
-                    continue;
-                }
-
-                if (symbol == 'M')
-                {
-                    enemies.Add(new Enemy(EnemyType.Middle, position, midIdle, midDeath, midBullets, 180, 300));
-                    continue;
-                }
-
-                if (symbol == 'H')
-                {
-                    enemies.Add(new Enemy(EnemyType.Strong, position, hardIdle, hardDeath, hardBullets, 152, 263));
-                    continue;
+                    case 'P':
+                        playerStart = position;
+                        continue;
+                    case 't':
+                        coins.Add(new Coin(coinTexture, position));
+                        continue;
+                    case 'E':
+                        enemies.Add(new Enemy(EnemyType.Weak, position, weakIdle, weakDeath, [], 160, 270));
+                        continue;
+                    case 'M':
+                        enemies.Add(new Enemy(EnemyType.Middle, position, midIdle, midDeath, midBullets, 180, 300));
+                        continue;
+                    case 'H':
+                        enemies.Add(new Enemy(EnemyType.Strong, position, hardIdle, hardDeath, hardBullets, 152, 263));
+                        continue;
                 }
 
                 if (!charToTexture.TryGetValue(symbol, out var texture))
                     continue;
 
-                bool isLadder = symbol == '|';
-                bool isPortal = symbol is '#' or '№' or '!' or '&';
-                bool isCollidable = !isLadder && !isPortal;
+                var isLadder = symbol == '|';
+                var isPortal = symbol is '#' or '№' or '!' or '&';
+                var isCollidable = !isLadder && !isPortal;
                 tiles.Add(new Tile(texture, position, isCollidable, isLadder, isPortal));
             }
         }
@@ -90,7 +79,7 @@ public static class LevelLoader
     private static Texture2D[] LoadFrames(ContentManager content, string pattern, int from, int to)
     {
         var frames = new Texture2D[to - from + 1];
-        for (int i = from; i <= to; i++)
+        for (var i = from; i <= to; i++)
             frames[i - from] = content.Load<Texture2D>(string.Format(pattern, i));
         return frames;
     }

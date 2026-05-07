@@ -5,7 +5,7 @@ namespace DarkLight;
 
 public class Coin
 {
-    private readonly Texture2D _texture;
+    private readonly Texture2D texture;
     public Vector2 Position { get; }
     public bool IsCollected { get; private set; }
 
@@ -22,7 +22,7 @@ public class Coin
 
     public Coin(Texture2D texture, Vector2 position)
     {
-        _texture = texture;
+        this.texture = texture;
         Position = position;
     }
 
@@ -40,6 +40,6 @@ public class Coin
     public void Draw(SpriteBatch spriteBatch)
     {
         if (!IsCollected)
-            spriteBatch.Draw(_texture, DrawRect, Color.White);
+            spriteBatch.Draw(texture, DrawRect, Color.White);
     }
 }

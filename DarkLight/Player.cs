@@ -16,12 +16,12 @@ public class Player
     public int Stamina { get; set; } = 100;
 
     public bool IsFacingRight { get; private set; } = true;
-    public bool IsPoisoned => _poisonTimer > 0;
-    public bool IsInvincible => _invincibilityTimer > 0;
+    public bool IsPoisoned => poisonTimer > 0;
+    public bool IsInvincible => invincibilityTimer > 0;
 
-    private readonly Texture2D _texture;
+    private readonly Texture2D texture;
 
-    public Rectangle Bounds => new((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
+    public Rectangle Bounds => new((int)Position.X, (int)Position.Y, texture.Width, texture.Height);
 
     private const float MaxMoveSpeed = 500f;
     private const float Acceleration = 4000f;
@@ -31,88 +31,88 @@ public class Player
     private const float LadderSpeed = 320f;
     private const float InvincibilityDuration = 1f;
 
-    private bool _isGrounded;
-    private bool _isOnLadder;
-    private KeyboardState _prevKeyboard;
-    private float _invincibilityTimer;
-    private float _poisonTimer;
-    private int _poisonDps;
-    private float _poisonAccumulator;
+    private bool isGrounded;
+    private bool isOnLadder;
+    private KeyboardState prevKeyboard;
+    private float invincibilityTimer;
+    private float poisonTimer;
+    private int poisonDps;
+    private float poisonAccumulator;
 
     public Player(Texture2D texture, Vector2 startPosition)
     {
-        _texture = texture;
+        this.texture = texture;
         Position = startPosition;
     }
 
     public void TakeDamage(int damage)
     {
-        if (_invincibilityTimer > 0) return;
-        int throughShield = damage - ShieldPoints;
+        if (invincibilityTimer > 0) return;
+        var throughShield = damage - ShieldPoints;
         if (throughShield > 0) { ShieldPoints = 0; HealthPoints -= throughShield; }
         else ShieldPoints -= damage;
-        _invincibilityTimer = InvincibilityDuration;
+        invincibilityTimer = InvincibilityDuration;
     }
 
     public void ApplyPoison(float duration, int dps)
     {
-        _poisonTimer = duration;
-        _poisonDps = dps;
+        poisonTimer = duration;
+        poisonDps = dps;
     }
 
     public void Update(GameTime gameTime, List<Tile> tiles)
     {
         var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        if (_invincibilityTimer > 0) _invincibilityTimer -= dt;
+        if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
-        if (_poisonTimer > 0)
+        if (poisonTimer > 0)
         {
-            _poisonTimer -= dt;
-            _poisonAccumulator += _poisonDps * dt;
-            int dmg = (int)_poisonAccumulator;
-            if (dmg > 0) { _poisonAccumulator -= dmg; HealthPoints -= dmg; }
+            poisonTimer -= dt;
+            poisonAccumulator += poisonDps * dt;
+            int dmg = (int)poisonAccumulator;
+            if (dmg > 0) { poisonAccumulator -= dmg; HealthPoints -= dmg; }
         }
 
         var kb = Keyboard.GetState();
 
-        bool touchingLadder = TouchesAny(tiles, t => t.IsLadder);
+        var touchingLadder = TouchesAny(tiles, t => t.IsLadder);
 
         // Grab ladder on single E press
-        if (!_isOnLadder && touchingLadder &&
-            kb.IsKeyDown(Keys.E) && !_prevKeyboard.IsKeyDown(Keys.E))
+        if (!isOnLadder && touchingLadder &&
+            kb.IsKeyDown(Keys.E) && !prevKeyboard.IsKeyDown(Keys.E))
         {
-            _isOnLadder = true;
+            isOnLadder = true;
             Velocity = Vector2.Zero;
         }
 
         // Auto-release when no ladder tile overlaps
-        if (_isOnLadder && !touchingLadder)
-            _isOnLadder = false;
+        if (isOnLadder && !touchingLadder)
+            isOnLadder = false;
 
-        if (_isOnLadder)
+        if (isOnLadder)
             UpdateLadder(kb, dt, tiles);
         else
             UpdateNormal(kb, dt, tiles);
 
-        _prevKeyboard = kb;
+        prevKeyboard = kb;
     }
 
     private void UpdateLadder(KeyboardState kb, float dt, List<Tile> tiles)
     {
         // Jump off ladder with Space
-        if (kb.IsKeyDown(Keys.Space) && !_prevKeyboard.IsKeyDown(Keys.Space))
+        if (kb.IsKeyDown(Keys.Space) && !prevKeyboard.IsKeyDown(Keys.Space))
         {
-            _isOnLadder = false;
+            isOnLadder = false;
             Velocity.Y = -JumpSpeed * 0.6f;
             return;
         }
 
-        float climbDir = 0f;
+        var climbDir = 0f;
         if (kb.IsKeyDown(Keys.W) || kb.IsKeyDown(Keys.Up))   climbDir = -1f;
         if (kb.IsKeyDown(Keys.S) || kb.IsKeyDown(Keys.Down))  climbDir =  1f;
 
-        float moveDir = 0f;
+        var moveDir = 0f;
         if (kb.IsKeyDown(Keys.A) || kb.IsKeyDown(Keys.Left))  moveDir -= 1f;
         if (kb.IsKeyDown(Keys.D) || kb.IsKeyDown(Keys.Right)) moveDir += 1f;
 
@@ -124,8 +124,19 @@ public class Player
         }
         else
         {
-            if (Velocity.X > 0f) { Velocity.X -= Friction * dt; if (Velocity.X < 0f) Velocity.X = 0f; }
-            else if (Velocity.X < 0f) { Velocity.X += Friction * dt; if (Velocity.X > 0f) Velocity.X = 0f; }
+            switch (Velocity.X)
+            {
+                case > 0f:
+                {
+                    Velocity.X -= Friction * dt; if (Velocity.X < 0f) Velocity.X = 0f;
+                    break;
+                }
+                case < 0f:
+                {
+                    Velocity.X += Friction * dt; if (Velocity.X > 0f) Velocity.X = 0f;
+                    break;
+                }
+            }
         }
 
         Velocity.Y = climbDir * LadderSpeed;
@@ -138,7 +149,7 @@ public class Player
     private void UpdateNormal(KeyboardState kb, float dt, List<Tile> tiles)
     {
         // Horizontal movement
-        float moveDir = 0f;
+        var moveDir = 0f;
         if (kb.IsKeyDown(Keys.A) || kb.IsKeyDown(Keys.Left))  moveDir -= 1f;
         if (kb.IsKeyDown(Keys.D) || kb.IsKeyDown(Keys.Right)) moveDir += 1f;
 
@@ -150,8 +161,19 @@ public class Player
         }
         else
         {
-            if (Velocity.X > 0f) { Velocity.X -= Friction * dt; if (Velocity.X < 0f) Velocity.X = 0f; }
-            else if (Velocity.X < 0f) { Velocity.X += Friction * dt; if (Velocity.X > 0f) Velocity.X = 0f; }
+            switch (Velocity.X)
+            {
+                case > 0f:
+                {
+                    Velocity.X -= Friction * dt; if (Velocity.X < 0f) Velocity.X = 0f;
+                    break;
+                }
+                case < 0f:
+                {
+                    Velocity.X += Friction * dt; if (Velocity.X > 0f) Velocity.X = 0f;
+                    break;
+                }
+            }
         }
 
         // Gravity
@@ -165,11 +187,11 @@ public class Player
         HandleCollisions(tiles, horizontal: true);
 
         Position.Y += Velocity.Y * dt;
-        _isGrounded = false;
+        isGrounded = false;
         HandleCollisions(tiles, horizontal: false);
 
         // Jump — Space or Up arrow only (W removed)
-        if (_isGrounded && (kb.IsKeyDown(Keys.Space) || kb.IsKeyDown(Keys.Up)))
+        if (isGrounded && (kb.IsKeyDown(Keys.Space) || kb.IsKeyDown(Keys.Up)))
             Velocity.Y = -JumpSpeed;
     }
 
@@ -195,7 +217,7 @@ public class Player
                 {
                     case > 0:
                         Position.Y = tile.Bounds.Top - playerBounds.Height;
-                        _isGrounded = true;
+                        isGrounded = true;
                         break;
                     case < 0:
                         Position.Y = tile.Bounds.Bottom;
@@ -211,15 +233,12 @@ public class Player
     private bool TouchesAny(List<Tile> tiles, System.Func<Tile, bool> predicate)
     {
         var b = Bounds;
-        foreach (var t in tiles)
-            if (predicate(t) && b.Intersects(t.Bounds))
-                return true;
-        return false;
+        return tiles.Any(t => predicate(t) && b.Intersects(t.Bounds));
     }
 
     public void Draw(SpriteBatch spriteBatch)
     {
         var effect = IsFacingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-        spriteBatch.Draw(_texture, Position, null, Color.White, 0f, Vector2.Zero, 1f, effect, 0f);
+        spriteBatch.Draw(texture, Position, null, Color.White, 0f, Vector2.Zero, 1f, effect, 0f);
     }
 }

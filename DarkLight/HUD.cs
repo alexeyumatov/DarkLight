@@ -6,24 +6,24 @@ namespace DarkLight;
 
 public class HUD
 {
-    private SpriteFont _font;
-    private Texture2D _heart;
-    private Texture2D _poisonedHeart;
-    private Texture2D _shield;
-    private Texture2D _dashReady;
-    private Texture2D _ultimateReady;
-    private Texture2D _ultimateNotReady;
+    private SpriteFont font;
+    private Texture2D heart;
+    private Texture2D poisonedHeart;
+    private Texture2D shield;
+    private Texture2D dashReady;
+    private Texture2D ultimateReady;
+    private Texture2D ultimateNotReady;
 
     public void LoadContent(ContentManager content)
     {
-        _font = content.Load<SpriteFont>("Font/Main_Font");
+        font = content.Load<SpriteFont>("Font/Main_Font");
         
-        _heart = content.Load<Texture2D>("PlayerData/heart");
-        _poisonedHeart = content.Load<Texture2D>("PlayerData/poisoned_heart");
-        _shield = content.Load<Texture2D>("PlayerData/shield");
-        _dashReady = content.Load<Texture2D>("PlayerData/Dash/dash_is_ready");
-        _ultimateReady = content.Load<Texture2D>("PlayerData/UltimateAttack/ultimate_ready");
-        _ultimateNotReady = content.Load<Texture2D>("PlayerData/UltimateAttack/ultimate_not_ready");
+        heart = content.Load<Texture2D>("PlayerData/heart");
+        poisonedHeart = content.Load<Texture2D>("PlayerData/poisoned_heart");
+        shield = content.Load<Texture2D>("PlayerData/shield");
+        dashReady = content.Load<Texture2D>("PlayerData/Dash/dash_is_ready");
+        ultimateReady = content.Load<Texture2D>("PlayerData/UltimateAttack/ultimate_ready");
+        ultimateNotReady = content.Load<Texture2D>("PlayerData/UltimateAttack/ultimate_not_ready");
     }
 
     public void Draw(SpriteBatch spriteBatch, Player hero, bool ultimateAttack, bool heroIsPoisoned, bool dashIsReady)
@@ -36,7 +36,7 @@ public class HUD
         
         if (dashIsReady)
         {
-            spriteBatch.Draw(_dashReady, new Rectangle(1400, 965, iconSize.X, iconSize.Y), Color.White);
+            spriteBatch.Draw(dashReady, new Rectangle(1400, 965, iconSize.X, iconSize.Y), Color.White);
         }
 
         string staminaData;
@@ -44,26 +44,26 @@ public class HUD
         switch (hero.Stamina)
         {
             case 100 when ultimateAttack:
-                spriteBatch.Draw(_ultimateReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
+                spriteBatch.Draw(ultimateReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
                 staminaData = "In Use";
                 break;
             case 100:
-                spriteBatch.Draw(_ultimateReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
+                spriteBatch.Draw(ultimateReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
                 staminaData = "Ready";
                 break;
             default:
-                spriteBatch.Draw(_ultimateNotReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
+                spriteBatch.Draw(ultimateNotReady, new Rectangle(900, 955, ultimateIconSize.X, ultimateIconSize.Y), Color.White);
                 staminaData = hero.Stamina.ToString();
                 break;
         }
         
-        spriteBatch.DrawString(_font, hpData, new Vector2(690, 987), Color.White);
+        spriteBatch.DrawString(font, hpData, new Vector2(690, 987), Color.White);
 
-        spriteBatch.Draw(heroIsPoisoned ? _poisonedHeart : _heart, new Rectangle(600, 970, iconSize.X, iconSize.Y), Color.White);
+        spriteBatch.Draw(heroIsPoisoned ? poisonedHeart : heart, new Rectangle(600, 970, iconSize.X, iconSize.Y), Color.White);
 
-        spriteBatch.DrawString(_font, shieldData, new Vector2(1290, 987), Color.White);
-        spriteBatch.Draw(_shield, new Rectangle(1200, 970, iconSize.X, iconSize.Y), Color.White);
+        spriteBatch.DrawString(font, shieldData, new Vector2(1290, 987), Color.White);
+        spriteBatch.Draw(shield, new Rectangle(1200, 970, iconSize.X, iconSize.Y), Color.White);
         
-        spriteBatch.DrawString(_font, staminaData, new Vector2(1006, 987), Color.White);
+        spriteBatch.DrawString(font, staminaData, new Vector2(1006, 987), Color.White);
     }
 }

@@ -8,12 +8,12 @@ namespace DarkLight;
 
 public class LevelSelectScreen
 {
-    private SpriteFont _font;
-    private Texture2D _pixel;
-    private Texture2D _coinTex;
-    private Texture2D[] _levelButtons;
-    private Rectangle[] _buttonRects;
-    private Rectangle _marketBtnRect;
+    private SpriteFont font;
+    private Texture2D pixel;
+    private Texture2D coinTex;
+    private Texture2D[] levelButtons;
+    private Rectangle[] buttonRects;
+    private Rectangle marketBtnRect;
 
     private const int TotalLevels = 14;
 
@@ -24,18 +24,18 @@ public class LevelSelectScreen
 
     public void LoadContent(ContentManager content, GraphicsDevice gd)
     {
-        _font    = content.Load<SpriteFont>("Font/Main_Font");
-        _coinTex = content.Load<Texture2D>("Objects/Coin/coin");
+        font    = content.Load<SpriteFont>("Font/Main_Font");
+        coinTex = content.Load<Texture2D>("Objects/Coin/coin");
 
-        _pixel = new Texture2D(gd, 1, 1);
-        _pixel.SetData(new[] { Color.White });
+        pixel = new Texture2D(gd, 1, 1);
+        pixel.SetData([Color.White]);
 
-        _levelButtons = new Texture2D[TotalLevels];
-        for (int i = 0; i < TotalLevels; i++)
-            _levelButtons[i] = content.Load<Texture2D>($"Menu/Buttons/NumberedButtons/level_button_{i + 1}");
+        levelButtons = new Texture2D[TotalLevels];
+        for (var i = 0; i < TotalLevels; i++)
+            levelButtons[i] = content.Load<Texture2D>($"Menu/Buttons/NumberedButtons/level_button_{i + 1}");
 
-        _buttonRects  = BuildButtonRects();
-        _marketBtnRect = new Rectangle(835, 890, 250, 65);
+        buttonRects  = BuildButtonRects();
+        marketBtnRect = new Rectangle(835, 890, 250, 65);
     }
 
     private static Rectangle[] BuildButtonRects()
@@ -44,17 +44,17 @@ public class LevelSelectScreen
         const int btnSize = 140;
         const int spacing = 24;
 
-        int rows  = (int)Math.Ceiling(TotalLevels / (float)cols);
-        int gridW = cols * btnSize + (cols - 1) * spacing;
-        int gridH = rows * btnSize + (rows - 1) * spacing;
-        int startX = (1920 - gridW) / 2;
-        int startY = (1080 - gridH) / 2 + 40;
+        var rows  = (int)Math.Ceiling(TotalLevels / (float)cols);
+        var gridW = cols * btnSize + (cols - 1) * spacing;
+        var gridH = rows * btnSize + (rows - 1) * spacing;
+        var startX = (1920 - gridW) / 2;
+        var startY = (1080 - gridH) / 2 + 40;
 
         var rects = new Rectangle[TotalLevels];
-        for (int i = 0; i < TotalLevels; i++)
+        for (var i = 0; i < TotalLevels; i++)
         {
-            int col = i % cols;
-            int row = i / cols;
+            var col = i % cols;
+            var row = i / cols;
             rects[i] = new Rectangle(
                 startX + col * (btnSize + spacing),
                 startY + row * (btnSize + spacing),
@@ -68,10 +68,10 @@ public class LevelSelectScreen
     {
         if (!mouseJustPressed) return -1;
 
-        if (_marketBtnRect.Contains(logicalMouse)) return 0;
+        if (marketBtnRect.Contains(logicalMouse)) return 0;
 
-        for (int i = 0; i < _buttonRects.Length; i++)
-            if (_buttonRects[i].Contains(logicalMouse))
+        for (var i = 0; i < buttonRects.Length; i++)
+            if (buttonRects[i].Contains(logicalMouse))
                 return i + 1;
 
         return -1;
@@ -80,37 +80,37 @@ public class LevelSelectScreen
     public void Draw(SpriteBatch spriteBatch, Point logicalMouse)
     {
         // Coin balance — centered at top
-        string coinsText = $"  {PlayerData.Coins}";
-        var ts = _font.MeasureString(coinsText);
-        int totalW = 40 + (int)ts.X;
-        int coinIconX = 960 - totalW / 2;
-        int coinIconY = 28;
-        spriteBatch.Draw(_coinTex, new Rectangle(coinIconX, coinIconY, 40, 60), Color.White);
-        spriteBatch.DrawString(_font, coinsText, new Vector2(coinIconX, coinIconY + 12), GoldColor);
+        var coinsText = $"  {PlayerData.Coins}";
+        var ts = font.MeasureString(coinsText);
+        var totalW = 40 + (int)ts.X;
+        var coinIconX = 960 - totalW / 2;
+        var coinIconY = 28;
+        spriteBatch.Draw(coinTex, new Rectangle(coinIconX, coinIconY, 40, 60), Color.White);
+        spriteBatch.DrawString(font, coinsText, new Vector2(coinIconX, coinIconY + 12), GoldColor);
 
         // Level buttons
-        for (int i = 0; i < TotalLevels; i++)
+        for (var i = 0; i < TotalLevels; i++)
         {
-            bool hov = _buttonRects[i].Contains(logicalMouse);
-            spriteBatch.Draw(_levelButtons[i], _buttonRects[i], hov ? new Color(255, 230, 130) : Color.White);
+            var hov = buttonRects[i].Contains(logicalMouse);
+            spriteBatch.Draw(levelButtons[i], buttonRects[i], hov ? new Color(255, 230, 130) : Color.White);
         }
 
         // Market button
-        bool marketHov = _marketBtnRect.Contains(logicalMouse);
-        spriteBatch.Draw(_pixel, _marketBtnRect, marketHov ? MarketBtnHov : MarketBtnNorm);
-        Border(spriteBatch, _marketBtnRect, BorderColor, 2);
-        string shopText = "МАГАЗИН";
-        var ss = _font.MeasureString(shopText);
-        spriteBatch.DrawString(_font, shopText,
-            new Vector2(_marketBtnRect.X + (_marketBtnRect.Width - ss.X) / 2,
-                        _marketBtnRect.Y + (_marketBtnRect.Height - ss.Y) / 2), GoldColor);
+        var marketHov = marketBtnRect.Contains(logicalMouse);
+        spriteBatch.Draw(pixel, marketBtnRect, marketHov ? MarketBtnHov : MarketBtnNorm);
+        Border(spriteBatch, marketBtnRect, BorderColor, 2);
+        var shopText = "МАГАЗИН";
+        var ss = font.MeasureString(shopText);
+        spriteBatch.DrawString(font, shopText,
+            new Vector2(marketBtnRect.X + (marketBtnRect.Width - ss.X) / 2,
+                        marketBtnRect.Y + (marketBtnRect.Height - ss.Y) / 2), GoldColor);
     }
 
     private void Border(SpriteBatch sb, Rectangle r, Color c, int t)
     {
-        sb.Draw(_pixel, new Rectangle(r.X,         r.Y,          r.Width, t),    c);
-        sb.Draw(_pixel, new Rectangle(r.X,         r.Bottom - t, r.Width, t),    c);
-        sb.Draw(_pixel, new Rectangle(r.X,         r.Y,          t, r.Height),   c);
-        sb.Draw(_pixel, new Rectangle(r.Right - t, r.Y,          t, r.Height),   c);
+        sb.Draw(pixel, new Rectangle(r.X,         r.Y,          r.Width, t),    c);
+        sb.Draw(pixel, new Rectangle(r.X,         r.Bottom - t, r.Width, t),    c);
+        sb.Draw(pixel, new Rectangle(r.X,         r.Y,          t, r.Height),   c);
+        sb.Draw(pixel, new Rectangle(r.Right - t, r.Y,          t, r.Height),   c);
     }
 }

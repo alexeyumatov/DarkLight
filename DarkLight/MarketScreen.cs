@@ -6,23 +6,23 @@ namespace DarkLight;
 
 public class MarketScreen
 {
-    private SpriteFont _font;
-    private Texture2D _pixel;
-    private Texture2D _coinTex;
+    private SpriteFont font;
+    private Texture2D pixel;
+    private Texture2D coinTex;
 
     // Upgrade icons (270×270 → displayed at 130×130)
-    private Texture2D _shieldIcon, _cooldownIcon, _damageIcon;
+    private Texture2D shieldIcon, cooldownIcon, damageIcon;
 
     // Buy button sprites per upgrade: [0]=Available, [1]=NotEnoughCoins, [2]=Maximum (270×60)
-    private Texture2D[] _shieldBtn   = new Texture2D[3];
-    private Texture2D[] _cooldownBtn = new Texture2D[3];
-    private Texture2D[] _damageBtn   = new Texture2D[3];
+    private Texture2D[] shieldBtn   = new Texture2D[3];
+    private Texture2D[] cooldownBtn = new Texture2D[3];
+    private Texture2D[] damageBtn   = new Texture2D[3];
 
     // Clickable hitboxes (set in LoadContent)
-    private Rectangle _shieldBtnRect;
-    private Rectangle _cooldownBtnRect;
-    private Rectangle _damageBtnRect;
-    private Rectangle _backBtnRect;
+    private Rectangle shieldBtnRect;
+    private Rectangle cooldownBtnRect;
+    private Rectangle damageBtnRect;
+    private Rectangle backBtnRect;
 
     // Layout constants (logical 1920×1080)
     private const int PanelX  = 240;
@@ -46,34 +46,34 @@ public class MarketScreen
 
     public void LoadContent(ContentManager content, GraphicsDevice gd)
     {
-        _font    = content.Load<SpriteFont>("Font/Main_Font");
-        _coinTex = content.Load<Texture2D>("Objects/Coin/coin");
+        font    = content.Load<SpriteFont>("Font/Main_Font");
+        coinTex = content.Load<Texture2D>("Objects/Coin/coin");
 
-        _pixel = new Texture2D(gd, 1, 1);
-        _pixel.SetData(new[] { Color.White });
+        pixel = new Texture2D(gd, 1, 1);
+        pixel.SetData([Color.White]);
 
-        _shieldIcon   = content.Load<Texture2D>("Menu/Market/armor_upgrade");
-        _cooldownIcon = content.Load<Texture2D>("Menu/Market/bullet_cooldown_upgrade");
-        _damageIcon   = content.Load<Texture2D>("Menu/Market/bullet_damage_upgrade");
+        shieldIcon   = content.Load<Texture2D>("Menu/Market/armor_upgrade");
+        cooldownIcon = content.Load<Texture2D>("Menu/Market/bullet_cooldown_upgrade");
+        damageIcon   = content.Load<Texture2D>("Menu/Market/bullet_damage_upgrade");
 
         var maxSprite = content.Load<Texture2D>("Menu/Market/MarketButtons/Maximum/max_amount");
 
-        _shieldBtn[0]   = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/shield_points");
-        _shieldBtn[1]   = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/shield_points");
-        _shieldBtn[2]   = maxSprite;
+        shieldBtn[0]   = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/shield_points");
+        shieldBtn[1]   = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/shield_points");
+        shieldBtn[2]   = maxSprite;
 
-        _cooldownBtn[0] = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/bullets_collide");
-        _cooldownBtn[1] = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/bullets_collide");
-        _cooldownBtn[2] = maxSprite;
+        cooldownBtn[0] = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/bullets_collide");
+        cooldownBtn[1] = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/bullets_collide");
+        cooldownBtn[2] = maxSprite;
 
-        _damageBtn[0]   = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/bullets_damage");
-        _damageBtn[1]   = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/bullets_damage");
-        _damageBtn[2]   = maxSprite;
+        damageBtn[0]   = content.Load<Texture2D>("Menu/Market/MarketButtons/Available/bullets_damage");
+        damageBtn[1]   = content.Load<Texture2D>("Menu/Market/MarketButtons/NotEnoughCoins/bullets_damage");
+        damageBtn[2]   = maxSprite;
 
-        _shieldBtnRect   = BtnRect(Row1Y);
-        _cooldownBtnRect = BtnRect(Row2Y);
-        _damageBtnRect   = BtnRect(Row3Y);
-        _backBtnRect     = new Rectangle(60, 960, 230, 65);
+        shieldBtnRect   = BtnRect(Row1Y);
+        cooldownBtnRect = BtnRect(Row2Y);
+        damageBtnRect   = BtnRect(Row3Y);
+        backBtnRect     = new Rectangle(60, 960, 230, 65);
     }
 
     private static Rectangle BtnRect(int rowY) =>
@@ -91,23 +91,23 @@ public class MarketScreen
     {
         if (!mouseJustPressed) return false;
 
-        if (_backBtnRect.Contains(logicalMouse)) return true;
+        if (backBtnRect.Contains(logicalMouse)) return true;
 
-        if (_shieldBtnRect.Contains(logicalMouse) &&
+        if (shieldBtnRect.Contains(logicalMouse) &&
             State(PlayerData.ShieldLevel, PlayerData.MaxShieldLevel, PlayerData.ShieldUpgradeCost) == BtnState.Available)
         {
             PlayerData.Coins      -= PlayerData.ShieldUpgradeCost;
             PlayerData.ShieldLevel++;
         }
 
-        if (_cooldownBtnRect.Contains(logicalMouse) &&
+        if (cooldownBtnRect.Contains(logicalMouse) &&
             State(PlayerData.CooldownLevel, PlayerData.MaxCooldownLevel, PlayerData.CooldownUpgradeCost) == BtnState.Available)
         {
             PlayerData.Coins        -= PlayerData.CooldownUpgradeCost;
             PlayerData.CooldownLevel++;
         }
 
-        if (_damageBtnRect.Contains(logicalMouse) &&
+        if (damageBtnRect.Contains(logicalMouse) &&
             State(PlayerData.DamageLevel, PlayerData.MaxDamageLevel, PlayerData.DamageUpgradeCost) == BtnState.Available)
         {
             PlayerData.Coins      -= PlayerData.DamageUpgradeCost;
@@ -120,54 +120,54 @@ public class MarketScreen
     public void Draw(SpriteBatch spriteBatch, Point logicalMouse)
     {
         // Title
-        string title = "МАГАЗИН";
-        var ts = _font.MeasureString(title);
-        spriteBatch.DrawString(_font, title, new Vector2(960 - ts.X / 2, 60), GoldColor);
+        const string title = "МАГАЗИН";
+        var ts = font.MeasureString(title);
+        spriteBatch.DrawString(font, title, new Vector2(960 - ts.X / 2, 60), GoldColor);
 
         // Coin balance (top right)
-        spriteBatch.Draw(_coinTex, new Rectangle(1660, 52, 40, 60), Color.White);
-        spriteBatch.DrawString(_font, $"{PlayerData.Coins}", new Vector2(1708, 64), GoldColor);
+        spriteBatch.Draw(coinTex, new Rectangle(1660, 52, 40, 60), Color.White);
+        spriteBatch.DrawString(font, $"{PlayerData.Coins}", new Vector2(1708, 64), GoldColor);
 
         // Upgrade rows
-        DrawRow(spriteBatch, logicalMouse, Row1Y, _shieldIcon, _shieldBtn, _shieldBtnRect,
+        DrawRow(spriteBatch, logicalMouse, Row1Y, shieldIcon, shieldBtn, shieldBtnRect,
             "ЩИТ",
             $"Уровень: {PlayerData.ShieldLevel}/{PlayerData.MaxShieldLevel}   {PlayerData.ShieldValue}/50",
             $"Цена: {PlayerData.ShieldUpgradeCost} монет",
             PlayerData.ShieldLevel, PlayerData.MaxShieldLevel, PlayerData.ShieldUpgradeCost);
 
-        int curMs  = 100 - PlayerData.CooldownLevel * 10;
-        int nextMs = PlayerData.CooldownLevel < PlayerData.MaxCooldownLevel ? curMs - 10 : curMs;
-        string cdStats = PlayerData.CooldownLevel < PlayerData.MaxCooldownLevel
+        var curMs  = 100 - PlayerData.CooldownLevel * 10;
+        var nextMs = PlayerData.CooldownLevel < PlayerData.MaxCooldownLevel ? curMs - 10 : curMs;
+        var cdStats = PlayerData.CooldownLevel < PlayerData.MaxCooldownLevel
             ? $"Уровень: {PlayerData.CooldownLevel}/{PlayerData.MaxCooldownLevel}   {curMs} мс -> {nextMs} мс"
             : $"Уровень: {PlayerData.CooldownLevel}/{PlayerData.MaxCooldownLevel}   {curMs} мс";
 
-        DrawRow(spriteBatch, logicalMouse, Row2Y, _cooldownIcon, _cooldownBtn, _cooldownBtnRect,
+        DrawRow(spriteBatch, logicalMouse, Row2Y, cooldownIcon, cooldownBtn, cooldownBtnRect,
             "СКОРОСТРЕЛЬНОСТЬ",
             cdStats,
             $"Цена: {PlayerData.CooldownUpgradeCost} монет",
             PlayerData.CooldownLevel, PlayerData.MaxCooldownLevel, PlayerData.CooldownUpgradeCost);
 
-        int curDmg  = PlayerData.BulletDamage;
-        int nextDmg = PlayerData.DamageLevel < PlayerData.MaxDamageLevel ? curDmg + 5 : curDmg;
-        string dmgStats = PlayerData.DamageLevel < PlayerData.MaxDamageLevel
+        var curDmg  = PlayerData.BulletDamage;
+        var nextDmg = PlayerData.DamageLevel < PlayerData.MaxDamageLevel ? curDmg + 5 : curDmg;
+        var dmgStats = PlayerData.DamageLevel < PlayerData.MaxDamageLevel
             ? $"Уровень: {PlayerData.DamageLevel}/{PlayerData.MaxDamageLevel}   {curDmg} -> {nextDmg}"
             : $"Уровень: {PlayerData.DamageLevel}/{PlayerData.MaxDamageLevel}   {curDmg}";
 
-        DrawRow(spriteBatch, logicalMouse, Row3Y, _damageIcon, _damageBtn, _damageBtnRect,
+        DrawRow(spriteBatch, logicalMouse, Row3Y, damageIcon, damageBtn, damageBtnRect,
             "УРОН ПУЛИ",
             dmgStats,
             $"Цена: {PlayerData.DamageUpgradeCost} монет",
             PlayerData.DamageLevel, PlayerData.MaxDamageLevel, PlayerData.DamageUpgradeCost);
 
         // Back button
-        bool backHov = _backBtnRect.Contains(logicalMouse);
-        FillRect(spriteBatch, _backBtnRect, backHov ? BackBtnHov : BackBtnNorm);
-        Border(spriteBatch, _backBtnRect, BorderColor, 2);
-        string backText = "< НАЗАД";
-        var bs = _font.MeasureString(backText);
-        spriteBatch.DrawString(_font, backText,
-            new Vector2(_backBtnRect.X + (_backBtnRect.Width - bs.X) / 2,
-                        _backBtnRect.Y + (_backBtnRect.Height - bs.Y) / 2), Color.White);
+        var backHov = backBtnRect.Contains(logicalMouse);
+        FillRect(spriteBatch, backBtnRect, backHov ? BackBtnHov : BackBtnNorm);
+        Border(spriteBatch, backBtnRect, BorderColor, 2);
+        var backText = "< НАЗАД";
+        var bs = font.MeasureString(backText);
+        spriteBatch.DrawString(font, backText,
+            new Vector2(backBtnRect.X + (backBtnRect.Width - bs.X) / 2,
+                        backBtnRect.Y + (backBtnRect.Height - bs.Y) / 2), Color.White);
     }
 
     private void DrawRow(SpriteBatch sb, Point mouse, int rowY,
@@ -183,31 +183,31 @@ public class MarketScreen
         sb.Draw(icon, new Rectangle(IconX, rowY + (RowH - IconSz) / 2, IconSz, IconSz), Color.White);
 
         // Text
-        int ty = rowY + 30;
-        sb.DrawString(_font, name, new Vector2(TextX, ty), GoldColor);
-        sb.DrawString(_font, stats, new Vector2(TextX, ty + 44), Color.White);
+        var ty = rowY + 30;
+        sb.DrawString(font, name, new Vector2(TextX, ty), GoldColor);
+        sb.DrawString(font, stats, new Vector2(TextX, ty + 44), Color.White);
 
         var state = State(level, maxLevel, cost);
         if (state != BtnState.Maximum)
         {
             var priceColor = state == BtnState.Available ? Color.LightGreen : Color.OrangeRed;
-            sb.DrawString(_font, priceText, new Vector2(TextX, ty + 90), priceColor);
+            sb.DrawString(font, priceText, new Vector2(TextX, ty + 90), priceColor);
         }
 
         // Button sprite
-        bool hov = state == BtnState.Available && btnRect.Contains(mouse);
+        var hov = state == BtnState.Available && btnRect.Contains(mouse);
         var tint = hov ? new Color(255, 230, 130) : Color.White;
         sb.Draw(btnSprites[(int)state], btnRect, tint);
     }
 
     private void FillRect(SpriteBatch sb, Rectangle r, Color c) =>
-        sb.Draw(_pixel, r, c);
+        sb.Draw(pixel, r, c);
 
     private void Border(SpriteBatch sb, Rectangle r, Color c, int t)
     {
-        sb.Draw(_pixel, new Rectangle(r.X,          r.Y,          r.Width, t),     c);
-        sb.Draw(_pixel, new Rectangle(r.X,          r.Bottom - t, r.Width, t),     c);
-        sb.Draw(_pixel, new Rectangle(r.X,          r.Y,          t, r.Height),    c);
-        sb.Draw(_pixel, new Rectangle(r.Right - t,  r.Y,          t, r.Height),    c);
+        sb.Draw(pixel, new Rectangle(r.X,          r.Y,          r.Width, t),     c);
+        sb.Draw(pixel, new Rectangle(r.X,          r.Bottom - t, r.Width, t),     c);
+        sb.Draw(pixel, new Rectangle(r.X,          r.Y,          t, r.Height),    c);
+        sb.Draw(pixel, new Rectangle(r.Right - t,  r.Y,          t, r.Height),    c);
     }
 }
