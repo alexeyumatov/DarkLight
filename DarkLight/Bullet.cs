@@ -10,8 +10,10 @@ public class Bullet
     public Vector2 Velocity;
     
     private readonly Texture2D _texture;
+    public int Damage { get; } = PlayerData.BulletDamage;
+
     private const float Speed = 1000f;
-    private int _lifeTimeMs = 2000; // Bullet lives for 2 seconds
+    private int _lifeTimeMs = 2000;
 
     public Rectangle Bounds => new((int)Position.X, (int)Position.Y, 64, 64);
 

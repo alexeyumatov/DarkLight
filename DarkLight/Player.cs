@@ -12,7 +12,7 @@ public class Player
     public Vector2 Velocity;
 
     public int HealthPoints { get; set; } = 100;
-    public int ShieldPoints { get; set; } = 50;
+    public int ShieldPoints { get; set; } = PlayerData.ShieldValue;
     public int Stamina { get; set; } = 100;
 
     public bool IsFacingRight { get; private set; } = true;

@@ -11,8 +11,10 @@ public static class LevelLoader
 {
     public const int TileSize = 128;
 
-    public static List<Tile> LoadTiles(ContentManager content, string levelAssetName, out Vector2 playerStart)
+    public static List<Tile> LoadTiles(ContentManager content, string levelAssetName,
+                                       out Vector2 playerStart, out List<Coin> coins)
     {
+        var coinTexture = content.Load<Texture2D>("Objects/Coin/coin");
         var charToTexture = BuildTextureMap(content);
         var levelText = File.ReadAllText(Path.Combine(content.RootDirectory, levelAssetName));
         var lines = levelText
@@ -20,6 +22,7 @@ public static class LevelLoader
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         var tiles = new List<Tile>();
+        coins = new List<Coin>();
         playerStart = Vector2.Zero;
 
         for (var y = 0; y < lines.Length; y++)
@@ -29,17 +32,21 @@ public static class LevelLoader
             {
                 var symbol = row[x];
                 var position = new Vector2(x * TileSize, y * TileSize);
-                
+
                 if (symbol == 'P')
                 {
                     playerStart = position;
                     continue;
                 }
 
-                if (!charToTexture.TryGetValue(symbol, out var texture))
+                if (symbol == 't')
                 {
-                    continue; // ignore non-tile symbols for now
+                    coins.Add(new Coin(coinTexture, position));
+                    continue;
                 }
+
+                if (!charToTexture.TryGetValue(symbol, out var texture))
+                    continue;
 
                 bool isLadder = symbol == '|';
                 bool isPortal = symbol is '#' or '№' or '!' or '&';
@@ -67,7 +74,7 @@ public static class LevelLoader
             ['+'] = content.Load<Texture2D>("Locations/Dark_Block"),
             [':'] = content.Load<Texture2D>("Locations/Left_Platform_Corner"),
             [';'] = content.Load<Texture2D>("Locations/Right_Platform_Corner"),
-            ['\"'] = content.Load<Texture2D>("Locations/Platform"),
+            ['"'] = content.Load<Texture2D>("Locations/Platform"),
             ['#'] = content.Load<Texture2D>("Locations/1_PART"),
             ['№'] = content.Load<Texture2D>("Locations/2_PART"),
             ['!'] = content.Load<Texture2D>("Locations/3_PART"),
