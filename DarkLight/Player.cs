@@ -16,6 +16,8 @@ public class Player
     public int Stamina { get; set; } = 100;
 
     public bool IsFacingRight { get; private set; } = true;
+    public bool IsPoisoned => _poisonTimer > 0;
+    public bool IsInvincible => _invincibilityTimer > 0;
 
     private readonly Texture2D _texture;
 
@@ -27,10 +29,15 @@ public class Player
     private const float JumpSpeed = 1100f;
     private const float Gravity = 4500f;
     private const float LadderSpeed = 320f;
+    private const float InvincibilityDuration = 1f;
 
     private bool _isGrounded;
     private bool _isOnLadder;
     private KeyboardState _prevKeyboard;
+    private float _invincibilityTimer;
+    private float _poisonTimer;
+    private int _poisonDps;
+    private float _poisonAccumulator;
 
     public Player(Texture2D texture, Vector2 startPosition)
     {
@@ -38,9 +45,35 @@ public class Player
         Position = startPosition;
     }
 
+    public void TakeDamage(int damage)
+    {
+        if (_invincibilityTimer > 0) return;
+        int throughShield = damage - ShieldPoints;
+        if (throughShield > 0) { ShieldPoints = 0; HealthPoints -= throughShield; }
+        else ShieldPoints -= damage;
+        _invincibilityTimer = InvincibilityDuration;
+    }
+
+    public void ApplyPoison(float duration, int dps)
+    {
+        _poisonTimer = duration;
+        _poisonDps = dps;
+    }
+
     public void Update(GameTime gameTime, List<Tile> tiles)
     {
         var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_invincibilityTimer > 0) _invincibilityTimer -= dt;
+
+        if (_poisonTimer > 0)
+        {
+            _poisonTimer -= dt;
+            _poisonAccumulator += _poisonDps * dt;
+            int dmg = (int)_poisonAccumulator;
+            if (dmg > 0) { _poisonAccumulator -= dmg; HealthPoints -= dmg; }
+        }
+
         var kb = Keyboard.GetState();
 
         bool touchingLadder = TouchesAny(tiles, t => t.IsLadder);
